@@ -118,11 +118,14 @@ RTX 3060 12GB처럼 VRAM이 제한적인 환경에서는 Ollama와 ComfyUI를 �
 
 ## 테스트
 
-프로젝트 루트에서:
+프로젝트 루트에서 테스트 의존성을 설치한 뒤 실행합니다.
 
 ```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
 .\.venv\Scripts\python.exe -m unittest discover -s tests -v
 ```
+
+`requirements-dev.txt`는 앱 실행에는 필요하지 않은 테스트 전용 의존성(`httpx2`)을 추가합니다.
 
 ## 라이선스
 

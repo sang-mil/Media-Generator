@@ -1,5 +1,6 @@
 import sqlite3
 import tempfile
+from contextlib import closing
 import unittest
 from pathlib import Path
 
@@ -12,8 +13,9 @@ class DatabaseMigrationTests(unittest.TestCase):
             original_path = db.DB_PATH
             db.DB_PATH = Path(temp_dir) / "old.sqlite3"
             try:
-                with sqlite3.connect(db.DB_PATH) as conn:
-                    conn.executescript("""
+                with closing(sqlite3.connect(db.DB_PATH)) as conn:
+                    with conn:
+                        conn.executescript("""
                     CREATE TABLE topics (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         title TEXT NOT NULL,
