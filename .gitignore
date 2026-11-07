@@ -1,0 +1,46 @@
+.venv/
+__pycache__/
+*.py[cod]
+.env
+*.db
+*.sqlite3
+output/
+generated/
+.logs/
+.app.pid
+.venv/requirements.sha256
+.pytest_cache/
+# Environment secrets
+.env
+.env.*
+!.env.example
+
+# Python environment and cache
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Runtime data
+.logs/
+logs/
+generated/
+benchmark_results/
+*.log
+*.pid
+
+# Local database
+*.sqlite
+*.sqlite3
+*.db
+
+# Backups
+*.backup
+*.bak
+
+# OS files
+Thumbs.db
+.DS_Store

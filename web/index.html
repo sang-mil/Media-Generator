@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Self-improving Media Pipeline</title>
+  <style>
+    :root{font-family:Inter,"Segoe UI",sans-serif;color:#172033;background:#f4f6fa;font-synthesis:none}*{box-sizing:border-box}body{margin:0}.wrap{max-width:1240px;margin:0 auto;padding:28px 20px 70px}.top{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:20px}.brand{font-size:23px;font-weight:850;letter-spacing:-.5px}.sub{color:#68758b;font-size:13px;margin-top:5px}.badge{display:inline-flex;align-items:center;gap:6px;padding:7px 11px;border-radius:999px;background:#eaf6ef;color:#167347;font-size:12px;font-weight:750}.dot{width:7px;height:7px;border-radius:50%;background:currentColor}.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.stat,.panel,.post{background:#fff;border:1px solid #e3e8f0;border-radius:16px;padding:18px;box-shadow:0 5px 20px #1a2b4608}.stat span{font-size:12px;color:#718096}.stat strong{display:block;font-size:28px;margin-top:8px;letter-spacing:-.6px}.layout{display:grid;grid-template-columns:340px 1fr;gap:16px;margin-top:16px}.panel h2{font-size:17px;margin:0 0 14px}.field{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}.field label{font-size:12px;color:#526078;font-weight:700}.field input,.field select,.field textarea{width:100%;padding:10px 11px;border:1px solid #dce3ed;border-radius:9px;font:inherit;background:#fff}.field textarea{min-height:72px;resize:vertical}button{border:0;border-radius:9px;padding:10px 13px;background:#245bd6;color:#fff;font-weight:750;cursor:pointer}button.secondary{background:#edf2fa;color:#24334f}button.ghost{background:#f7f8fb;color:#44536b;border:1px solid #e3e8f0}button:disabled{opacity:.55;cursor:wait}.big-action{width:100%;padding:15px 17px;font-size:15px;border-radius:12px;background:#154ec1}.muted{color:#718096;font-size:12px;line-height:1.55}.topic{border-top:1px solid #edf0f5;padding:12px 0}.topic:first-child{border-top:0}.topic-title,.post-title{font-weight:800;margin-bottom:6px}.tag{display:inline-block;background:#f0f4fa;color:#526078;padding:4px 7px;border-radius:6px;font-size:11px;margin-right:5px;margin-top:3px}.panelhead{display:flex;justify-content:space-between;align-items:center;gap:12px}.panel-wide{margin-top:16px}.hint{background:#fff8e7;border:1px solid #f5e4b6;padding:12px;border-radius:10px;color:#715314;font-size:12px;line-height:1.55;margin-bottom:16px}.system{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:16px}.syscard{background:#fff;border:1px solid #e3e8f0;border-radius:12px;padding:12px 14px}.syscard b{display:block;font-size:13px;margin:3px 0}.syscard span{font-size:11px;color:#708096}.ok{color:#16814e}.bad{color:#b45309}.post{margin-top:10px;padding:16px}.posthead{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.content{white-space:pre-wrap;font-size:13px;line-height:1.65;color:#38465d}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.actions a{font-size:12px;color:#245bd6;align-self:center}.recommend{padding:12px;border:1px solid #e8edf5;border-radius:10px;margin-top:9px}.recommend strong{display:block;font-size:13px;margin-bottom:5px}.empty{color:#8390a4;font-size:13px;padding:10px 0}.images{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:12px 0}.images img{width:100%;aspect-ratio:4/5;object-fit:contain;background:#f4f6fa;border-radius:9px;border:1px solid #e3e8f0}.panelrow{border-top:1px dashed #e7ebf2;padding:10px 0}.panelrow:first-child{border-top:0}.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#172033;color:#fff;padding:12px 16px;border-radius:10px;display:none;z-index:10;max-width:min(92vw,700px);font-size:13px}.spinner{display:inline-block;width:13px;height:13px;border:2px solid #ffffff70;border-top-color:white;border-radius:50%;animation:spin .8s linear infinite;vertical-align:-2px;margin-right:7px}@keyframes spin{to{transform:rotate(360deg)}}details summary{cursor:pointer;color:#33445e;font-size:13px;font-weight:700}.recommend-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.footer{color:#7b8798;font-size:11px;margin-top:20px;text-align:center}@media(max-width:900px){.layout{grid-template-columns:1fr}.system{grid-template-columns:1fr 1fr}}@media(max-width:600px){.grid{grid-template-columns:repeat(2,1fr)}.top{align-items:flex-start;flex-direction:column}.system{grid-template-columns:1fr}.images{grid-template-columns:repeat(2,1fr)}.recommend-grid{grid-template-columns:1fr}.wrap{padding:18px 12px 50px}}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div><div class="brand">Self-improving Media Pipeline</div><div class="sub">로컬 AI 콘텐츠 제작 · 구조화 출력 · 기술 검수 · 성과 기반 개선</div></div>
+    <div class="badge"><span class="dot"></span> LOCAL RUNNER v0.4</div>
+  </header>
+
+  <div class="system" id="system-status">
+    <div class="syscard"><span>OLLAMA</span><b>상태 확인 중...</b><span>로컬 대본 생성 엔진</span></div>
+    <div class="syscard"><span>COMFYUI</span><b>상태 확인 중...</b><span>웹툰 이미지 생성 엔진</span></div>
+    <div class="syscard"><span>INSTAGRAM</span><b class="bad">수동 승인 필요</b><span>Meta API 연결 전 게시 전 검수 유지</span></div>
+  </div>
+
+  <div class="hint"><b>자동화 범위:</b> 앱 실행 시 Ollama와 ComfyUI를 확인·실행하고, 아래 버튼 한 번으로 주제 발굴(필요한 경우) → 4컷 대본 생성 → 이미지 생성 → 초안 저장까지 진행합니다. 사실 확인과 게시 승인은 사람이 진행하며, Instagram 자동 발행은 Meta 공식 API 연결 후 활성화합니다.</div>
+
+  <section class="grid">
+    <div class="stat"><span>대기 주제</span><strong id="stat-topics">-</strong></div>
+    <div class="stat"><span>초안 / 승인</span><strong id="stat-drafts">-</strong></div>
+    <div class="stat"><span>게시 완료</span><strong id="stat-published">-</strong></div>
+    <div class="stat"><span>성과 기록</span><strong id="stat-measured">-</strong></div>
+  </section>
+
+  <section class="panel panel-wide">
+    <div class="panelhead"><div><h2>자동 콘텐츠 제작</h2><div class="muted">Gemma 4 · SD 1.5 웹툰 세로형 · DPM++ 2M Karras · 선택형 2차 잠재 업스케일</div></div></div>
+    <button id="run-pipeline" class="big-action" onclick="runPipeline()">다음 콘텐츠 자동 제작 시작</button>
+    <p id="pipeline-status" class="muted">Ollama 구조화 출력과 단계별 재시도를 사용합니다. 기술 출처가 없으면 검증 완료로 표시하지 않습니다. 이미지는 컷별 순차 생성하며, LatentUpscaleBy 지원 시 2차 디테일 보정을 적용합니다. 캐릭터 참조 어댑터는 별도 설치 전까지 텍스트·시드 기반 일관성 보조만 사용합니다.</p>
+  </section>
+
+  <div class="layout">
+    <section class="panel">
+      <h2>주제 직접 추가</h2>
+      <form id="topic-form">
+        <div class="field"><label>주제</label><input name="title" required minlength="3" placeholder="예: 스마트폰 저장 공간이 부족한 이유" /></div>
+        <div class="field"><label>분류</label><select name="category"><option>디지털 생활</option><option>컴퓨터 기초</option><option>디지털 안전</option><option>웹 도구</option><option>AI 기초</option><option>모바일 팁</option><option>인터넷 상식</option></select></div>
+        <div class="field"><label>대상 독자</label><input name="audience" value="IT에 익숙하지 않은 일반 사용자" /></div>
+        <div class="field"><label>콘텐츠 각도</label><textarea name="angle">일상적인 문제를 쉽고 재미있게 설명</textarea></div>
+        <div class="field"><label>검증 자료 / 공식 문서 발췌 (선택)</label><textarea name="source_notes" maxlength="12000" placeholder="공식 문서에서 확인한 핵심 내용이나 출처 발췌문을 붙여 넣으세요. URL만 넣으면 자동으로 열람하지 않습니다."></textarea><div class="muted">자료가 없으면 기술 주장은 '검증 필요'로 남습니다. URL만 입력해도 자동으로 검색하지 않습니다.</div></div>
+        <button type="submit">주제 저장</button>
+      </form>
+      <h2 style="margin-top:26px">주제 큐</h2>
+      <div id="topics-list" class="empty">불러오는 중...</div>
+    </section>
+
+    <section class="panel">
+      <div class="panelhead"><h2>콘텐츠 초안 및 게시물</h2><button class="secondary" onclick="loadAll()">새로고침</button></div>
+      <div id="posts-list" class="empty">불러오는 중...</div>
+    </section>
+  </div>
+
+  <section class="panel panel-wide">
+    <div class="panelhead"><h2>성과 기반 다음 콘텐츠 추천</h2><span class="tag">Self-improving Engine</span></div>
+    <p class="muted">초기에는 설명 가능한 규칙 기반으로 주제·형식을 비교합니다. 데이터가 충분하지 않으면 확정적 결론 대신 실험을 추천합니다. 게시 후 동일한 관찰 시점(예: 7일)의 수치를 입력하세요.</p>
+    <div id="recommendations"><div class="empty">불러오는 중...</div></div>
+  </section>
+
+  <section class="panel panel-wide">
+    <h2>자동 실행 및 안전 원칙</h2>
+    <div class="content">1. run.ps1 실행 시 Ollama 서비스가 꺼져 있으면 자동으로 시작하고 설치된 모델을 탐색합니다.
+2. ComfyUI가 설치되어 있으면 기존 포터블 실행 스크립트를 찾아 시작합니다. 설치 위치가 다르면 .env의 COMFYUI_DIR를 지정하세요.
+3. 스토리 설계 → 이미지 프롬프트/캡션 → 출처 대조 검수 순으로 별도 생성합니다.
+4. Ollama JSON Schema와 Pydantic 검증을 적용하고 잘림/스키마 오류는 제한적으로 재시도합니다.
+5. 모든 LLM 단계가 끝나면 설정에 따라 모델을 언로드해 ComfyUI용 VRAM을 확보합니다.
+6. 이미지 생성이 실패해도 대본과 이미지 프롬프트는 보존합니다.
+7. AI의 출처 대조는 독립적인 사실 검증이 아닙니다. 출처 원문·최신성 확인과 최종 게시 승인은 사람이 진행합니다.
+8. Instagram 자동 게시와 Insights 수집은 Meta 공식 API 권한 및 계정 연결이 끝난 후 별도 활성화합니다.
+9. 로컬 PC의 절전·종료 상태에서는 자동 작업이 실행되지 않습니다.</div>
+  </section>
+  <div class="footer">로컬 전용 · 127.0.0.1 · 토큰과 계정 비밀번호를 브라우저에 저장하지 않습니다.</div>
+</div>
+<div id="toast" class="toast"></div>
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function api(path, options={}) { const r = await fetch(path,{headers:{'Content-Type':'application/json'},...options}); const d = await r.json().catch(()=>({})); if(!r.ok) throw new Error(d.detail || `요청 실패 (${r.status})`); return d; }
+function toast(message){$('toast').textContent=message;$('toast').style.display='block';setTimeout(()=>$('toast').style.display='none',5000)}
+function statusCard(name,ok,detail,extra=''){return `<div class="syscard"><span>${esc(name)}</span><b class="${ok?'ok':'bad'}">${ok?'● 연결됨':'● 연결 안 됨'}</b><span>${esc(detail||extra||'')}</span></div>`}
+async function loadSystem(){try{const d=await api('/api/system/status');const q=d.comfyui.quality||{};const comfyDetail=d.comfyui.selected_checkpoint?`${d.comfyui.selected_checkpoint} · ${q.width||512}×${q.height||640} · ${q.sampler||'DPM++ 2M'}${q.hires_supported&&q.hires_requested?' · Hires ON':''}`:(d.comfyui.error||'체크포인트 확인 필요');$('system-status').innerHTML=statusCard('OLLAMA',d.ollama.available&&!!d.ollama.selected_model,d.ollama.selected_model||d.ollama.error)+statusCard('COMFYUI',d.image_generation_ready,comfyDetail)+`<div class="syscard"><span>INSTAGRAM</span><b class="bad">● 수동 승인 모드</b><span>Meta API 권한 연결 전에는 자동 게시하지 않습니다.</span></div>`;}catch(e){$('system-status').innerHTML=`<div class="syscard"><b class="bad">상태 확인 실패</b><span>${esc(e.message)}</span></div>`}}
+async function loadAll(){await Promise.all([loadSystem(),loadDashboard(),loadTopics(),loadPosts(),loadRecommendations()]);}
+async function loadDashboard(){const d=await api('/api/dashboard');$('stat-topics').textContent=d.queued_topics;$('stat-drafts').textContent=d.drafts;$('stat-published').textContent=d.published;$('stat-measured').textContent=d.measured_posts;}
+async function loadTopics(){const rows=await api('/api/topics');$('topics-list').innerHTML=rows.length?rows.map(t=>`<div class="topic"><div class="topic-title">${esc(t.title)}</div><div class="muted"><span class="tag">${esc(t.category)}</span><span class="tag">${esc(t.status)}</span></div></div>`).join(''):'<div class="empty">대기 주제가 없습니다. 자동 제작 버튼을 누르면 AI가 새 주제를 발굴합니다.</div>';}
+async function runPipeline(){const btn=$('run-pipeline');btn.disabled=true;btn.innerHTML='<span class="spinner"></span>대본 및 이미지 제작 중...';$('pipeline-status').textContent='Ollama가 스토리 설계와 이미지 프롬프트를 단계별 JSON Schema로 생성하고, 출처 자료가 있으면 주장을 대조합니다. 이후 모델을 언로드하고 ComfyUI 이미지를 생성합니다.';try{const d=await api('/api/pipeline/run-next',{method:'POST'});const count=d.post.images?.length||0;if(d.images.status==='generated'){$('pipeline-status').textContent=`완료: 초안 #${d.post.id}, 이미지 ${count}장 생성. 검수 후 승인하세요.`;toast('대본과 웹툰 이미지 제작이 완료됐습니다.');}else{$('pipeline-status').textContent=`대본 초안 #${d.post.id} 생성 완료. 이미지 생성은 미완료: ${d.images.error||'ComfyUI 연결 필요'}. 이미지 프롬프트는 저장됐습니다.`;toast('대본 생성 완료. ComfyUI 상태를 확인하세요.');}await loadAll();}catch(e){$('pipeline-status').textContent=`자동 제작 실패: ${e.message}`;toast(e.message);}finally{btn.disabled=false;btn.textContent='다음 콘텐츠 자동 제작 시작';}}
+async function generateImages(id){try{toast('ComfyUI가 4개 패널을 생성합니다. 시간이 걸릴 수 있습니다.');await api(`/api/posts/${id}/generate-images`,{method:'POST'});toast('이미지 생성 완료');await loadAll();}catch(e){toast(e.message)}}
+async function loadPosts(){
+  const rows=await api('/api/posts');
+  $('posts-list').innerHTML=rows.length?rows.map(p=>{
+    const images=(p.images||[]).map(x=>`<img src="${esc(x.url)}" alt="웹툰 ${esc(x.panel)}컷" loading="lazy">`).join('');
+    const tr=p.technical_review||{};
+    const reviewLabel=tr.status==='source_material_required'?'출처 자료 없음 · 검증 필요':tr.status==='ai_compared_with_user_material'?'제공 자료와 AI 대조 완료 · 사람 확인 필요':'검수 상태 미기록';
+    const claims=(tr.claims||[]).map(c=>`<div class="panelrow"><b>${esc(c.assessment)} · ${esc(c.risk_level)}</b><p class="content">${esc(c.claim)}</p><p class="muted">${esc(c.explanation)}</p>${c.source_excerpt?`<p class="muted">근거 발췌: ${esc(c.source_excerpt)}</p>`:''}</div>`).join('');
+    const meta=p.generation_meta||{};
+    return `<article class="post"><div class="posthead"><div><div class="post-title">#${p.id} ${esc(p.title)}</div><div class="muted"><span class="tag">${esc(p.category)}</span><span class="tag">${esc(p.status)}</span><span class="tag">${p.images?.length||0}/4 이미지</span><span class="tag">${esc(meta.model||'모델 정보 없음')}</span></div></div></div><p class="content"><b>훅:</b> ${esc(p.hook)}
+<b>본문:</b> ${esc(p.caption)}
+<b>해시태그:</b> ${esc((p.hashtags||[]).map(x=>'#'+x).join(' '))}</p>${images?`<div class="images">${images}</div>`:''}<details><summary>4컷 대본 · 기술 검수 · 생성 기록</summary>${(p.panels||[]).map(x=>`<div class="panelrow"><b>${x.number}컷 · ${esc(x.scene)}</b><p class="content">${esc(x.dialogue)}</p><p class="muted">핵심 정보: ${esc(x.key_information||'')}</p><p class="muted">이미지: ${esc(x.visual_prompt)}</p></div>`).join('')}<p class="content"><b>캐릭터 가이드</b>
+${esc(p.character_guide||'')}</p><div class="hint"><b>기술 검수: ${esc(reviewLabel)}</b><br>${esc(tr.summary||'검수 정보가 없습니다.')}</div>${claims}<p class="content"><b>검수 주의사항</b>
+${esc((tr.critical_issues||[]).join('\n'))}
+${esc((p.fact_check||[]).join('\n'))}</p><p class="muted">생성 기록: ${esc(JSON.stringify(meta.pipeline||[]))}</p></details><div class="actions">${p.images?.length!==4&&p.status==='draft'?`<button class="secondary" onclick="generateImages(${p.id})">이미지 다시 생성</button>`:''}${p.status==='draft'?`<button onclick="approvePost(${p.id})">검수 완료 · 승인</button>`:''}${p.status==='approved'?`<button class="secondary" onclick="markPublished(${p.id})">Instagram 게시 완료 기록</button>`:''}${p.status==='published'?`<button class="secondary" onclick="toggleMetrics(${p.id})">성과 입력 / 수정</button>`:''}${p.post_url?`<a href="${esc(p.post_url)}" target="_blank" rel="noopener">게시물 열기</a>`:''}</div><div id="metrics-${p.id}"></div></article>`
+  }).join(''):'<div class="empty">아직 생성된 콘텐츠가 없습니다. 위의 자동 제작 버튼으로 시작하세요.</div>';
+}
+async function approvePost(id){try{await api(`/api/posts/${id}/approve`,{method:'POST'});toast('검수 승인 완료. 이제 Instagram에 게시할 수 있습니다.');await loadAll()}catch(e){toast(e.message)}}
+async function markPublished(id){const url=prompt('Instagram에 직접 게시한 게시물 URL을 입력하세요.');if(!url)return;try{await api(`/api/posts/${id}/mark-published`,{method:'POST',body:JSON.stringify({post_url:url,confirmed:true})});toast('게시 완료 기록을 저장했습니다.');await loadAll()}catch(e){toast(e.message)}}
+function toggleMetrics(id){const box=$(`metrics-${id}`);if(box.innerHTML){box.innerHTML='';return;}box.innerHTML=`<div class="metrics">${[['views','조회수'],['reach','도달'],['likes','좋아요'],['comments','댓글'],['shares','공유'],['saves','저장'],['profile_visits','프로필 방문'],['follows','팔로우'],['link_clicks','링크 클릭']].map(([k,l])=>`<div class="field"><label>${l}</label><input type="number" min="0" id="m-${id}-${k}" value="0"></div>`).join('')}</div><div class="field" style="margin-top:8px"><label>메모 / 측정 시점</label><input id="m-${id}-notes" placeholder="예: 게시 후 7일 기준"></div><div class="actions"><button onclick="saveMetrics(${id})">성과 저장</button></div>`;}
+async function saveMetrics(id){const keys=['views','reach','likes','comments','shares','saves','profile_visits','follows','link_clicks'];const body={};keys.forEach(k=>body[k]=Number($(`m-${id}-${k}`).value||0));body.notes=$(`m-${id}-notes`).value;try{await api(`/api/posts/${id}/metrics`,{method:'POST',body:JSON.stringify(body)});toast('성과 저장 완료. 다음 콘텐츠 추천에 반영됩니다.');await loadAll()}catch(e){toast(e.message)}}
+async function loadRecommendations(){const d=await api('/api/recommendations');let html=`<p class="muted">${esc(d.message)}</p><p class="muted">${esc(d.method)}</p>`;if(d.recommendations?.length)html+=d.recommendations.map(r=>`<div class="recommend"><strong>${esc(r.title)}</strong><span class="muted">${esc(r.reason)}</span></div>`).join('');if(d.rankings?.length)html+=`<h3 style="font-size:14px;margin:18px 0 8px">주제·형식별 성과</h3>`+d.rankings.map(r=>`<div class="recommend"><strong>${esc(r.category)} · ${esc(r.format)}</strong><span class="muted">게시물 ${r.posts}개 · 보정 점수 ${r.adjusted_score}</span></div>`).join('');$('recommendations').innerHTML=html;}
+$('topic-form').addEventListener('submit',async e=>{e.preventDefault();const body=Object.fromEntries(new FormData(e.target).entries());body.format='webtoon_carousel';try{await api('/api/topics',{method:'POST',body:JSON.stringify(body)});e.target.reset();toast('주제를 저장했습니다.');await loadAll()}catch(err){toast(err.message)}});
+loadAll().catch(e=>toast(e.message));
+</script>
+</body>
+</html>
