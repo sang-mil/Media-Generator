@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
@@ -13,6 +13,7 @@ from pydantic import BaseModel, Field
 from . import db
 from .ai import generate_topic_ideas, generate_webtoon, ollama_status, unload_model
 from .comfyui import generate_panels, get_status as comfyui_status
+from .carousel import compose_carousel, normalize_template
 from .config import GENERATED_DIR
 from .learning import build_recommendations
 
@@ -20,7 +21,7 @@ ROOT = Path(__file__).resolve().parent.parent
 WEB_DIR = ROOT / "web"
 GENERATED_DIR.mkdir(parents=True, exist_ok=True)
 
-app = FastAPI(title="Self-improving Media Pipeline", version="0.3.0")
+app = FastAPI(title="Self-improving Media Pipeline", version="0.5.0")
 app.mount("/static", StaticFiles(directory=WEB_DIR), name="static")
 app.mount("/media", StaticFiles(directory=GENERATED_DIR), name="media")
 
@@ -30,6 +31,7 @@ class TopicCreate(BaseModel):
     category: str = Field(min_length=2, max_length=60)
     audience: str = Field(default="IT에 익숙하지 않은 일반 사용자", max_length=160)
     format: str = Field(default="webtoon_carousel", max_length=40)
+    design_template: Literal["character_explainer", "image_caption", "minimal_infographic"] = "character_explainer"
     angle: str = Field(default="일상적인 문제를 쉽고 재미있게 설명", max_length=300)
     source_notes: str = Field(default="", max_length=12000)
 
@@ -71,15 +73,16 @@ def _create_post(topic: dict[str, Any]) -> dict[str, Any]:
     now = db.now_iso()
     with db.connect() as conn:
         cur = conn.execute(
-            """INSERT INTO posts(topic_id, title, category, format, hook, panels_json, caption,
+            """INSERT INTO posts(topic_id, title, category, format, design_template, hook, panels_json, caption,
                hashtags_json, fact_check_json, technical_review_json, generation_meta_json,
                character_guide, images_json, status, created_at, updated_at)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '[]', 'draft', ?, ?)""",
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '[]', 'draft', ?, ?)""",
             (
                 topic["id"],
                 str(generated.get("title") or topic["title"]),
                 topic["category"],
                 topic["format"],
+                normalize_template(topic.get("design_template")),
                 str(generated.get("hook") or ""),
                 json.dumps(generated.get("panels", []), ensure_ascii=False),
                 str(generated.get("caption") or ""),
@@ -100,14 +103,39 @@ def _create_post(topic: dict[str, Any]) -> dict[str, Any]:
 
 def _generate_images_for_post(post: dict[str, Any]) -> dict[str, Any]:
     try:
-        images = generate_panels(int(post["id"]), post.get("panels", []), post.get("character_guide", ""))
+        template = normalize_template(post.get("design_template"))
+        images = generate_panels(
+            int(post["id"]),
+            post.get("panels", []),
+            post.get("character_guide", ""),
+            design_template=template,
+        )
+        composition_warning = None
+        try:
+            images = compose_carousel(
+                int(post["id"]),
+                str(post.get("title") or "디지털 생활"),
+                post.get("panels", []),
+                images,
+                design_template=template,
+                generated_dir=GENERATED_DIR,
+            )
+        except Exception as exc:
+            # Keep original images when typography/layout rendering fails.
+            composition_warning = str(exc)
+
         with db.connect() as conn:
             conn.execute(
                 "UPDATE posts SET images_json=?, updated_at=? WHERE id=?",
                 (json.dumps(images, ensure_ascii=False), db.now_iso(), post["id"]),
             )
             row = conn.execute("SELECT * FROM posts WHERE id=?", (post["id"],)).fetchone()
-        return {"status": "generated", "post": db.decode_post(row), "images": images}
+        return {
+            "status": "generated" if not composition_warning else "generated_with_warnings",
+            "post": db.decode_post(row),
+            "images": images,
+            "composition_warning": composition_warning,
+        }
     except Exception as exc:
         return {"status": "not_generated", "error": str(exc), "images": []}
 
@@ -124,7 +152,7 @@ def index() -> FileResponse:
 
 @app.get("/api/health")
 def health() -> dict[str, Any]:
-    return {"ok": True, "app": "Self-improving Media Pipeline", "version": "0.3.0", "publish_mode": "human_approval_required"}
+    return {"ok": True, "app": "Self-improving Media Pipeline", "version": "0.5.0", "publish_mode": "human_approval_required"}
 
 
 @app.get("/api/system/status")
@@ -132,7 +160,7 @@ def system_status() -> dict[str, Any]:
     ollama = ollama_status()
     comfy = comfyui_status()
     return {
-        "app": {"available": True, "version": "0.3.0"},
+        "app": {"available": True, "version": "0.5.0"},
         "ollama": ollama,
         "comfyui": comfy,
         "pipeline_ready": bool(ollama.get("available") and ollama.get("selected_model")),
@@ -168,8 +196,8 @@ def list_topics() -> list[dict[str, Any]]:
 def create_topic(payload: TopicCreate) -> dict[str, Any]:
     with db.connect() as conn:
         cur = conn.execute(
-            "INSERT INTO topics(title, category, audience, format, angle, source_notes, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
-            (payload.title, payload.category, payload.audience, payload.format, payload.angle, payload.source_notes, db.now_iso()),
+            "INSERT INTO topics(title, category, audience, format, design_template, angle, source_notes, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (payload.title, payload.category, payload.audience, payload.format, payload.design_template, payload.angle, payload.source_notes, db.now_iso()),
         )
         topic_id = cur.lastrowid
         row = conn.execute("SELECT * FROM topics WHERE id=?", (topic_id,)).fetchone()
@@ -193,7 +221,7 @@ def run_next_pipeline() -> dict[str, Any]:
         with db.connect() as conn:
             for idea in ideas:
                 conn.execute(
-                    "INSERT INTO topics(title, category, audience, format, angle, source_notes, created_at) VALUES (?, ?, ?, 'webtoon_carousel', ?, '', ?)",
+                    "INSERT INTO topics(title, category, audience, format, design_template, angle, source_notes, created_at) VALUES (?, ?, ?, 'webtoon_carousel', 'character_explainer', ?, '', ?)",
                     (idea["title"], idea["category"], idea["audience"], idea["angle"], db.now_iso()),
                 )
             topic_row = conn.execute("SELECT * FROM topics WHERE status='queued' ORDER BY id ASC LIMIT 1").fetchone()
@@ -235,7 +263,7 @@ def create_post_images(post_id: int) -> dict[str, Any]:
     if not row:
         raise HTTPException(status_code=404, detail="게시물을 찾을 수 없습니다.")
     result = _generate_images_for_post(db.decode_post(row))
-    if result["status"] != "generated":
+    if result["status"] not in ("generated", "generated_with_warnings"):
         raise HTTPException(status_code=503, detail=result["error"])
     return result["post"]
 

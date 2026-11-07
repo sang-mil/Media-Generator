@@ -32,24 +32,26 @@ AUDIO_CHECKPOINT_MARKERS = (
     "ace_step", "ace-step", "stable-audio", "stable_audio", "musicgen", "audio"
 )
 
-WEBTOON_POSITIVE_STYLE = (
-    "(masterpiece:1.08), (best quality:1.12), polished 2D Korean webtoon illustration, "
-    "professional digital comic art, clean confident lineart, consistent line weight, "
-    "appealing expressive character design, clear facial expressions, readable body language, "
-    "controlled cel shading, subtle soft shadows, harmonious warm pastel color palette, "
-    "clear silhouette, balanced composition, detailed but uncluttered background, "
-    "portrait 4:5 composition, single comic panel, one coherent moment, "
-    "no panel grid, no collage, no text, no lettering, no logo, no watermark"
-)
+TEMPLATE_IMAGE_GUIDANCE = {
+    "character_explainer": (
+        "simple flat 2D mascot, one friendly original character explaining one idea, plain warm white background"
+    ),
+    "image_caption": (
+        "clean 2D editorial illustration, one strong central subject, simple calm background"
+    ),
+    "minimal_infographic": (
+        "minimal flat vector illustration, white background, one object or character, generous whitespace"
+    ),
+}
 
-WEBTOON_NEGATIVE = (
-    "(worst quality:1.3), (low quality:1.2), lowres, blurry, out of focus, jpeg artifacts, "
-    "noisy image, oversharpened, oversaturated, poorly drawn face, asymmetrical eyes, "
-    "bad anatomy, malformed hands, extra fingers, missing fingers, fused fingers, "
-    "extra arms, extra legs, duplicate person, multiple heads, distorted face, "
-    "inconsistent character design, different hairstyle, different outfit, cropped head, "
-    "out of frame, text, letters, subtitles, speech bubble, watermark, signature, logo, "
-    "photorealistic, 3d render, collage, split screen, multiple panels"
+ILLUSTRATION_NEGATIVE = (
+    "(worst quality:1.3), (low quality:1.2), lowres, blurry, out of focus, motion blur, "
+    "depth of field, bokeh, jpeg artifacts, noisy image, muddy colors, oversaturated, "
+    "poorly drawn face, asymmetrical eyes, bad anatomy, malformed hands, extra fingers, "
+    "missing fingers, fused fingers, extra arms, extra legs, duplicate person, multiple heads, "
+    "distorted face, cropped head, out of frame, text, letters, subtitles, speech bubble, "
+    "watermark, signature, logo, photorealistic, 3d render, collage, split screen, multiple panels, "
+    "complex crowded background, multiple scenes"
 )
 
 
@@ -89,7 +91,7 @@ def _object_info(node_name: str) -> dict[str, Any] | None:
 
 def _quality_info(hires_supported: bool = False) -> dict[str, Any]:
     return {
-        "preset": "sd15_webtoon_portrait_v1",
+        "preset": "instagram_illustration_base_v2",
         "width": COMFYUI_WIDTH,
         "height": COMFYUI_HEIGHT,
         "steps": COMFYUI_STEPS,
@@ -99,7 +101,7 @@ def _quality_info(hires_supported: bool = False) -> dict[str, Any]:
         "hires_requested": COMFYUI_HIRES_ENABLED,
         "hires_supported": bool(hires_supported),
         "hires_scale": COMFYUI_HIRES_SCALE if COMFYUI_HIRES_ENABLED and hires_supported else 1.0,
-        "character_consistency": "shared_seed_and_repeated_character_guide",
+        "character_consistency": "text_guide_only",
         "reference_adapter": "not_configured",
     }
 
@@ -150,7 +152,7 @@ def _workflow(
     workflow: dict[str, Any] = {
         "3": {"class_type": "CheckpointLoaderSimple", "inputs": {"ckpt_name": checkpoint}},
         "4": {"class_type": "CLIPTextEncode", "inputs": {"text": prompt, "clip": ["3", 1]}},
-        "5": {"class_type": "CLIPTextEncode", "inputs": {"text": WEBTOON_NEGATIVE, "clip": ["3", 1]}},
+        "5": {"class_type": "CLIPTextEncode", "inputs": {"text": ILLUSTRATION_NEGATIVE, "clip": ["3", 1]}},
         "6": {
             "class_type": "EmptyLatentImage",
             "inputs": {"width": COMFYUI_WIDTH, "height": COMFYUI_HEIGHT, "batch_size": 1},
@@ -242,18 +244,25 @@ def _wait_for_image(prompt_id: str, timeout: int) -> dict[str, Any]:
     raise TimeoutError(f"ComfyUI 이미지 생성이 {timeout}초 안에 완료되지 않았습니다.")
 
 
-def _build_panel_prompt(panel: dict[str, Any], character_guide: str, index: int) -> str:
-    visual = str(panel.get("visual_prompt") or panel.get("scene") or "simple educational cartoon scene").strip()
-    character_lock = (
-        "same recurring character design across the full comic, preserve the exact hairstyle, hair color, "
-        "face shape, eye style, clothing, accessories and body proportions described in the character guide; "
-        "do not redesign or replace the characters"
-    )
-    composition = (
-        f"comic panel {index} of the same four-panel story, a single scene only, "
-        "clear foreground subject, readable pose, medium shot unless the scene requires otherwise"
-    )
-    parts = [WEBTOON_POSITIVE_STYLE, character_lock, character_guide.strip(), visual, composition]
+def _build_panel_prompt(
+    panel: dict[str, Any],
+    character_guide: str,
+    index: int,
+    design_template: str = "character_explainer",
+) -> str:
+    visual = " ".join(str(panel.get("visual_prompt") or panel.get("scene") or "simple educational illustration").split())[:140]
+    guide = " ".join(str(character_guide or "").split())[:90]
+    template_style = TEMPLATE_IMAGE_GUIDANCE.get(design_template, TEMPLATE_IMAGE_GUIDANCE["character_explainer"])
+    # SD 1.5 CLIP has a short prompt window. Put the scene early so a long
+    # character description cannot push the main action out of the prompt.
+    parts = [
+        template_style,
+        visual,
+        guide,
+        "clean 2D illustration, crisp outlines, flat colors, clear silhouette",
+        "same hairstyle and outfit for a recurring character",
+        "one standalone image, no text, no collage, no panel borders",
+    ]
     return ", ".join(part for part in parts if part)
 
 
@@ -261,6 +270,7 @@ def generate_panels(
     post_id: int,
     panels: list[dict[str, Any]],
     character_guide: str = "",
+    design_template: str = "character_explainer",
 ) -> list[dict[str, Any]]:
     status = get_status()
     if not status["available"]:
@@ -279,7 +289,7 @@ def generate_panels(
     base_seed = random.randint(1, 2**31 - 1)
 
     for index, panel in enumerate(panels, start=1):
-        visual_prompt = _build_panel_prompt(panel, character_guide, index)
+        visual_prompt = _build_panel_prompt(panel, character_guide, index, design_template)
         seed = base_seed if COMFYUI_SEED_MODE == "shared" else random.randint(1, 2**31 - 1)
         workflow = _workflow(
             checkpoint,
@@ -320,7 +330,8 @@ def generate_panels(
             "prompt": visual_prompt,
             "seed": seed,
             "checkpoint": checkpoint,
-            "quality_preset": "sd15_webtoon_portrait_v1",
+            "quality_preset": "instagram_illustration_base_v2",
+            "design_template": design_template,
             "width": COMFYUI_WIDTH,
             "height": COMFYUI_HEIGHT,
             "steps": COMFYUI_STEPS,

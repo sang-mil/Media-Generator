@@ -1,5 +1,6 @@
 import sqlite3
 import tempfile
+from contextlib import closing
 import unittest
 from pathlib import Path
 
@@ -12,8 +13,9 @@ class DatabaseMigrationTests(unittest.TestCase):
             original_path = db.DB_PATH
             db.DB_PATH = Path(temp_dir) / "old.sqlite3"
             try:
-                with sqlite3.connect(db.DB_PATH) as conn:
-                    conn.executescript("""
+                with closing(sqlite3.connect(db.DB_PATH)) as conn:
+                    with conn:
+                        conn.executescript("""
                     CREATE TABLE topics (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         title TEXT NOT NULL,
@@ -50,14 +52,18 @@ class DatabaseMigrationTests(unittest.TestCase):
                 with db.connect() as conn:
                     topic_columns = {row["name"] for row in conn.execute("PRAGMA table_info(topics)").fetchall()}
                     post_columns = {row["name"] for row in conn.execute("PRAGMA table_info(posts)").fetchall()}
-                    topic = conn.execute("SELECT title, source_notes FROM topics WHERE id=1").fetchone()
-                    post = conn.execute("SELECT title, technical_review_json, generation_meta_json FROM posts WHERE id=1").fetchone()
+                    topic = conn.execute("SELECT title, source_notes, design_template FROM topics WHERE id=1").fetchone()
+                    post = conn.execute("SELECT title, technical_review_json, generation_meta_json, design_template FROM posts WHERE id=1").fetchone()
                 self.assertIn("source_notes", topic_columns)
+                self.assertIn("design_template", topic_columns)
+                self.assertIn("design_template", post_columns)
                 self.assertIn("technical_review_json", post_columns)
                 self.assertIn("generation_meta_json", post_columns)
                 self.assertEqual(topic["title"], "기존 주제")
+                self.assertEqual(topic["design_template"], "character_explainer")
                 self.assertEqual(post["title"], "기존 게시물")
                 self.assertEqual(post["technical_review_json"], "{}")
+                self.assertEqual(post["design_template"], "character_explainer")
             finally:
                 db.DB_PATH = original_path
 

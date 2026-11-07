@@ -40,6 +40,7 @@ def init_db() -> None:
                 category TEXT NOT NULL,
                 audience TEXT NOT NULL DEFAULT 'IT에 익숙하지 않은 일반 사용자',
                 format TEXT NOT NULL DEFAULT 'webtoon_carousel',
+                design_template TEXT NOT NULL DEFAULT 'character_explainer',
                 angle TEXT NOT NULL DEFAULT '',
                 source_notes TEXT NOT NULL DEFAULT '',
                 status TEXT NOT NULL DEFAULT 'queued',
@@ -52,6 +53,7 @@ def init_db() -> None:
                 title TEXT NOT NULL,
                 category TEXT NOT NULL,
                 format TEXT NOT NULL,
+                design_template TEXT NOT NULL DEFAULT 'character_explainer',
                 hook TEXT NOT NULL DEFAULT '',
                 panels_json TEXT NOT NULL DEFAULT '[]',
                 caption TEXT NOT NULL DEFAULT '',
@@ -99,6 +101,10 @@ def init_db() -> None:
         topic_columns = {row["name"] for row in conn.execute("PRAGMA table_info(topics)").fetchall()}
         if "source_notes" not in topic_columns:
             conn.execute("ALTER TABLE topics ADD COLUMN source_notes TEXT NOT NULL DEFAULT ''")
+        if "design_template" not in topic_columns:
+            conn.execute("ALTER TABLE topics ADD COLUMN design_template TEXT NOT NULL DEFAULT 'character_explainer'")
+        if "design_template" not in post_columns:
+            conn.execute("ALTER TABLE posts ADD COLUMN design_template TEXT NOT NULL DEFAULT 'character_explainer'")
 
         count = conn.execute("SELECT COUNT(*) AS n FROM topics").fetchone()["n"]
         if count == 0:
