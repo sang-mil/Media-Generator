@@ -39,10 +39,18 @@ class ComfyUIQualityTests(unittest.TestCase):
         self.assertEqual(workflow["8"]["inputs"]["samples"], ["7", 0])
 
     def test_character_guide_is_repeated_in_each_panel_prompt(self):
-        prompt = _build_panel_prompt({"scene": "카페에서 스마트폰을 든다"}, "woman with short black bob and yellow sweater", 2)
-        self.assertIn("same recurring character design", prompt)
+        prompt = _build_panel_prompt({"scene": "카페에서 스마트폰을 든다"}, "woman with short black bob and yellow sweater", 2, "character_explainer")
+        self.assertIn("same hairstyle and outfit", prompt)
         self.assertIn("short black bob", prompt)
-        self.assertIn("single comic panel", prompt)
+        self.assertIn("one standalone image", prompt)
+        self.assertIn("plain warm white background", prompt)
+        self.assertLess(prompt.index("plain warm white background"), prompt.index("카페에서"))
+        self.assertLess(prompt.index("카페에서"), prompt.index("short black bob"))
+
+    def test_caption_template_uses_clean_editorial_guidance(self):
+        prompt = _build_panel_prompt({"scene": "휴대폰을 든다"}, "original mascot", 1, "image_caption")
+        self.assertIn("strong central subject", prompt)
+        self.assertNotIn("plain warm white background", prompt)
 
     def test_comfyui_execution_error_is_readable(self):
         message = _format_execution_error([

@@ -35,10 +35,12 @@ class ApiV03Tests(unittest.TestCase):
                             "title": "스마트폰 저장 공간",
                             "category": "디지털 생활",
                             "source_notes": "Android 공식 문서 발췌 테스트",
+                            "design_template": "image_caption",
                         })
                         self.assertEqual(topic_response.status_code, 200)
                         topic = topic_response.json()
                         self.assertEqual(topic["source_notes"], "Android 공식 문서 발췌 테스트")
+                        self.assertEqual(topic["design_template"], "image_caption")
 
                         post_response = client.post(f"/api/topics/{topic['id']}/generate")
                         self.assertEqual(post_response.status_code, 200)
@@ -46,6 +48,7 @@ class ApiV03Tests(unittest.TestCase):
                         self.assertEqual(len(post["panels"]), 4)
                         self.assertEqual(post["technical_review"]["status"], "source_material_required")
                         self.assertEqual(post["generation_meta"]["model"], "gemma4:26b")
+                        self.assertEqual(post["design_template"], "image_caption")
             finally:
                 db.DB_PATH = original_path
 
