@@ -475,12 +475,17 @@ def main(argv: list[str] | None = None) -> int:
             report_path = output_dir / "report.json"
             report = _load_or_create_report(report_path, args.run_id, args.seed)
             existing_keys = {item.get("key") for item in report.get("results", [])}
+            pending_plan = []
             for checkpoint, profile in plan:
                 key = f"{profile.name}__{_safe_slug(checkpoint)}"
                 if key in existing_keys and not args.overwrite:
-                    raise SystemExit(
-                        f"이미 결과가 있습니다: {key}. 재생성하려면 --overwrite를 사용하세요."
-                    )
+                    print(f"[건너뜀] 이미 생성된 결과: {key}")
+                    continue
+                pending_plan.append((checkpoint, profile))
+            plan = pending_plan
+            if not plan:
+                print("요청한 모델의 결과가 이미 모두 존재합니다. 재생성하려면 --overwrite를 사용하세요.")
+                return 0
 
             print(f"실험 ID: {args.run_id}")
             print(f"Seed: {args.seed}")
